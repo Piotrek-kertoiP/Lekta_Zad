@@ -1,9 +1,13 @@
 from flask import Flask
 from flask import request
 from endpoint_handlers import evaluate_expr
-
 app = Flask(__name__)
-SERVER_PORT = "5555"
+
+SERVER_PORT = "5000"
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
 
 
 @app.route('/evaluate', methods=["POST"])

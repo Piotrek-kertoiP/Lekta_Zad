@@ -1,2 +1,2 @@
 def evaluate_expr(expr):
-    return "test szpiegoski"
+    return "test szpiegoski\n"
