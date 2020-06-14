@@ -1,7 +1,6 @@
 from custom_exceptions import ParenthesisError, UnallowedCharacterError
 
 class RequestValidator:
-
     def __init__(self, request):
         self.expr = request.json["expression"]
 
