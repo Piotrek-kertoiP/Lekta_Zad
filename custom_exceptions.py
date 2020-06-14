@@ -1,5 +1,13 @@
-class ParenthesisError(Exception):
+class InvalidExpressionError(Exception):
     pass
 
-class UnallowedCharacterError(Exception):
+class ParenthesesError(InvalidExpressionError):
     pass
+
+class UnallowedCharacterError(InvalidExpressionError):
+    pass
+
+class MissingOperationArgumentError(InvalidExpressionError):
+    pass
+
+
