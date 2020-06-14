@@ -66,7 +66,25 @@ class RequestValidator:
         return True
 
     def add_missing_parentheses(self):
-        # todo
+        mul_div_index = 0
+        while mul_div_index < len(self.expr):
+            if self.expr[mul_div_index] == "*" or self.expr[mul_div_index] == "/":
+                if 0 <= mul_div_index - 1 and not self.expr[mul_div_index - 1] == ")":
+                    left_index = mul_div_index - 1
+                    while left_index > 0 and is_digit(self.expr[left_index]):
+                        left_index += -1
+                    self.expr = self.expr[0:left_index + 1] + "(" + self.expr[left_index + 1:mul_div_index] + ")" + self.expr[mul_div_index:]
+                    mul_div_index += 2
+
+                if mul_div_index + 1 <= len(self.expr) and not self.expr[mul_div_index + 1] == "(":
+                    right_index = mul_div_index + 1
+                    while right_index < len(self.expr) and is_digit(self.expr[right_index]):
+                        right_index += 1
+                    self.expr = self.expr[0:mul_div_index + 1] + "(" + self.expr[mul_div_index + 1:right_index] + ")" + self.expr[right_index:]
+                    mul_div_index += 2
+            mul_div_index += 1
+
+    def remove_redundant_parentheses(self):
         pass
 
     def validate_request(self):
@@ -79,8 +97,10 @@ class RequestValidator:
         if not self.check_operator_neighbours():
             raise MissingOperationArgumentError
         self.add_missing_parentheses()
+        self.remove_redundant_parentheses()
         print("validate_request: " + self.expr)
         return self.expr
+
 
 
 class ExpressionEvaluator:
@@ -91,4 +111,4 @@ class ExpressionEvaluator:
 
     def evaluate_expr(self):
         print("evaluate_expr: " + self.expr)
-        return self.expr
+        return self.expr + "\n"
