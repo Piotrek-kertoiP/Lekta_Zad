@@ -134,10 +134,10 @@ class RequestValidator:
                     add_substr_index += 2
             add_substr_index += 1
 
-        # wrap left, right argument and mul/div operator
+        # wrap left, right argument and add/substr operator
         add_substr_index = 0
         while add_substr_index < len(self.expr):
-            if self.expr[add_substr_index] == "*" or self.expr[add_substr_index] == "/":
+            if self.expr[add_substr_index] == "+" or self.expr[add_substr_index] == "-":
                 left_index = add_substr_index - 2
                 right_index = add_substr_index + 2
                 left_arg_parenth_cntr = 1
