@@ -69,13 +69,14 @@ class RequestValidator:
         mul_div_index = 0
         while mul_div_index < len(self.expr):
             if self.expr[mul_div_index] == "*" or self.expr[mul_div_index] == "/":
+                # wrap left argument
                 if 0 <= mul_div_index - 1 and not self.expr[mul_div_index - 1] == ")":
                     left_index = mul_div_index - 1
                     while left_index > 0 and is_digit(self.expr[left_index]):
                         left_index += -1
                     self.expr = self.expr[0:left_index + 1] + "(" + self.expr[left_index + 1:mul_div_index] + ")" + self.expr[mul_div_index:]
                     mul_div_index += 2
-
+                # wrap right argument
                 if mul_div_index + 1 <= len(self.expr) and not self.expr[mul_div_index + 1] == "(":
                     right_index = mul_div_index + 1
                     while right_index < len(self.expr) and is_digit(self.expr[right_index]):
@@ -83,6 +84,74 @@ class RequestValidator:
                     self.expr = self.expr[0:mul_div_index + 1] + "(" + self.expr[mul_div_index + 1:right_index] + ")" + self.expr[right_index:]
                     mul_div_index += 2
             mul_div_index += 1
+
+        # wrap left, right argument and mul/div operator
+        mul_div_index = 0
+        while mul_div_index < len(self.expr):
+            if self.expr[mul_div_index] == "*" or self.expr[mul_div_index] == "/":
+                left_index = mul_div_index - 2
+                right_index = mul_div_index + 2
+                left_arg_parenth_cntr = 1
+                right_arg_parenth_cntr = 1
+                while left_index > 0 and not left_arg_parenth_cntr == 0:
+                    if self.expr[left_index] == ")":
+                        left_arg_parenth_cntr += 1
+                    elif self.expr[left_index] == "(":
+                        left_arg_parenth_cntr += -1
+                    left_index += -1
+                while right_index < len(self.expr) and not right_arg_parenth_cntr == 0:
+                    if self.expr[right_index] == ")":
+                        right_arg_parenth_cntr += -1
+                    elif self.expr[right_index] == "(":
+                        right_arg_parenth_cntr += 1
+                    right_index += 1
+                self.expr = self.expr[0:left_index+1] + "(" + self.expr[left_index+1:right_index] + ")" + self.expr[right_index:]
+                mul_div_index += 1
+            mul_div_index += 1
+
+        add_substr_index = 0
+        while add_substr_index < len(self.expr):
+            if self.expr[add_substr_index] == "+" or self.expr[add_substr_index] == "-":
+                # wrap left argument
+                if 0 <= add_substr_index - 1 and not self.expr[add_substr_index - 1] == ")":
+                    left_index = add_substr_index - 1
+                    while left_index > 0 and is_digit(self.expr[left_index]):
+                        left_index += -1
+                    self.expr = self.expr[0:left_index + 1] + "(" + self.expr[left_index + 1:add_substr_index] + ")" + self.expr[add_substr_index:]
+                    add_substr_index += 2
+                # wrap right argument
+                if add_substr_index + 1 <= len(self.expr) and not self.expr[add_substr_index + 1] == "(":
+                    right_index = add_substr_index + 1
+                    while right_index < len(self.expr) and is_digit(self.expr[right_index]):
+                        right_index += 1
+                    self.expr = self.expr[0:add_substr_index + 1] + "(" + self.expr[add_substr_index + 1:right_index] + ")" + self.expr[right_index:]
+                    add_substr_index += 2
+            add_substr_index += 1
+
+        # wrap left, right argument and mul/div operator
+        add_substr_index = 0
+        while add_substr_index < len(self.expr):
+            if self.expr[add_substr_index] == "*" or self.expr[add_substr_index] == "/":
+                left_index = add_substr_index - 2
+                right_index = add_substr_index + 2
+                left_arg_parenth_cntr = 1
+                right_arg_parenth_cntr = 1
+                while left_index > 0 and not left_arg_parenth_cntr == 0:
+                    if self.expr[left_index] == ")":
+                        left_arg_parenth_cntr += 1
+                    elif self.expr[left_index] == "(":
+                        left_arg_parenth_cntr += -1
+                    left_index += -1
+                while right_index < len(self.expr) and not right_arg_parenth_cntr == 0:
+                    if self.expr[right_index] == ")":
+                        right_arg_parenth_cntr += -1
+                    elif self.expr[right_index] == "(":
+                        right_arg_parenth_cntr += 1
+                    right_index += 1
+                self.expr = self.expr[0:left_index + 1] + "(" + self.expr[left_index + 1:right_index] + ")" + self.expr[right_index:]
+                add_substr_index += 1
+            add_substr_index += 1
+
 
     def remove_redundant_parentheses(self):
         pass
@@ -111,4 +180,5 @@ class ExpressionEvaluator:
 
     def evaluate_expr(self):
         print("evaluate_expr: " + self.expr)
+        # todo: implement ONP algorithm
         return self.expr + "\n"
