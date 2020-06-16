@@ -77,25 +77,31 @@ class RequestValidator:
         while mul_div_index < len(self.expr):
             if self.expr[mul_div_index] == "*" or self.expr[mul_div_index] == "/":
                 # wrap left argument
+                if verbose: print("add_missing_parentheses, mul/div, wrap left argument, start" + self.expr)
                 if 0 <= mul_div_index - 1 and not self.expr[mul_div_index - 1] == ")":
                     left_index = mul_div_index - 1
                     while left_index > 0 and is_digit(self.expr[left_index]):
                         left_index += -1
                     self.expr = self.expr[:left_index + 1] + "(" + self.expr[left_index + 1:mul_div_index] + ")" + self.expr[mul_div_index:]
                     mul_div_index += 2
+                if verbose: print("add_missing_parentheses, mul/div, wrap left argument, end" + self.expr)
+
                 # wrap right argument
+                if verbose: print("add_missing_parentheses, mul/div, wrap right argument, start" + self.expr)
                 if mul_div_index + 1 <= len(self.expr) and not self.expr[mul_div_index + 1] == "(":
                     right_index = mul_div_index + 1
                     while right_index < len(self.expr) and is_digit(self.expr[right_index]):
                         right_index += 1
                     self.expr = self.expr[:mul_div_index + 1] + "(" + self.expr[mul_div_index + 1:right_index] + ")" + self.expr[right_index:]
                     mul_div_index += 2
+                if verbose: print("add_missing_parentheses, mul/div, wrap right argument, end" + self.expr)
             mul_div_index += 1
 
         # wrap left, right argument and mul/div operator
         mul_div_index = 0
         while mul_div_index < len(self.expr):
             if self.expr[mul_div_index] == "*" or self.expr[mul_div_index] == "/":
+                if verbose: print("add_missing_parentheses, mul/div, wrap left, right argument and mul/div operator, start" + self.expr)
                 left_index = mul_div_index - 2
                 right_index = mul_div_index + 2
                 left_arg_parenth_cntr = 1
@@ -114,31 +120,39 @@ class RequestValidator:
                     right_index += 1
                 self.expr = self.expr[:left_index+1] + "(" + self.expr[left_index+1:right_index] + ")" + self.expr[right_index:]
                 mul_div_index += 1
+                if verbose: print("add_missing_parentheses, mul/div, wrap left, right argument and mul/div operator, end" + self.expr)
             mul_div_index += 1
 
         add_substr_index = 0
         while add_substr_index < len(self.expr):
             if self.expr[add_substr_index] == "+" or self.expr[add_substr_index] == "-":
                 # wrap left argument
+                if verbose: print("add_missing_parentheses, add/substr, wrap left argument, start" + self.expr)
                 if 0 <= add_substr_index - 1 and not self.expr[add_substr_index - 1] == ")":
                     left_index = add_substr_index - 1
-                    while left_index > 0 and is_digit(self.expr[left_index]):
+                    while left_index >= 0 and is_digit(self.expr[left_index]):
                         left_index += -1
                     self.expr = self.expr[:left_index + 1] + "(" + self.expr[left_index + 1:add_substr_index] + ")" + self.expr[add_substr_index:]
                     add_substr_index += 2
+                if verbose: print("add_missing_parentheses, add/substr, wrap left argument, end" + self.expr)
+
                 # wrap right argument
+                if verbose: print("add_missing_parentheses, add/substr, wrap right argument, start" + self.expr)
                 if add_substr_index + 1 <= len(self.expr) and not self.expr[add_substr_index + 1] == "(":
                     right_index = add_substr_index + 1
                     while right_index < len(self.expr) and is_digit(self.expr[right_index]):
                         right_index += 1
                     self.expr = self.expr[:add_substr_index + 1] + "(" + self.expr[add_substr_index + 1:right_index] + ")" + self.expr[right_index:]
                     add_substr_index += 2
+                if verbose: print("add_missing_parentheses, add/substr, wrap right argument, end" + self.expr)
+
             add_substr_index += 1
 
         # wrap left, right argument and add/substr operator
         add_substr_index = 0
         while add_substr_index < len(self.expr):
             if self.expr[add_substr_index] == "+" or self.expr[add_substr_index] == "-":
+                if verbose: print("add_missing_parentheses, add/substr, wrap left, right argument and add/substr operator, start" + self.expr)
                 left_index = add_substr_index - 2
                 right_index = add_substr_index + 2
                 left_arg_parenth_cntr = 1
@@ -157,11 +171,13 @@ class RequestValidator:
                     right_index += 1
                 self.expr = self.expr[:left_index + 1] + "(" + self.expr[left_index + 1:right_index] + ")" + self.expr[right_index:]
                 add_substr_index += 1
+                if verbose: print("add_missing_parentheses, add/substr, wrap left, right argument and add/substr operator, end" + self.expr)
             add_substr_index += 1
         if verbose: print("add_missing_parentheses, end:\t\t " + self.expr)
 
     def remove_redundant_parentheses(self):
         if verbose: print("remove_redundant_parentheses, start: " + self.expr)
+        # remove things like (1)
         index = 1
         while index < len(self.expr) - 1:
             if is_digit(self.expr[index]) and self.expr[index - 1] == "(":
@@ -173,6 +189,28 @@ class RequestValidator:
                     self.expr = self.expr[:left_parenth_index] + self.expr[left_parenth_index + 1:right_parenth_index] + self.expr[right_parenth_index + 1:]
                     index += -1
             index += 1
+        # remove things like ()
+        index = 0
+        while index < len(self.expr) - 1:
+            if self.expr[index] == "(" and self.expr[index+1] == ")":
+                self.expr = self.expr[:index] + self.expr[index+2:]
+            index += 1
+        # remove parenthesis wrapping whole expression
+        if self.expr[0] == "(":
+            index = 1
+            parenth_counter = 1
+            while index < len(self.expr):
+                if self.expr[index] == "(":
+                    parenth_counter += 1
+                elif self.expr[index] == ")":
+                    parenth_counter += -1
+                if parenth_counter == 0 and index == len(self.expr):
+                    self.expr = self.expr[1:len(self.expr) - 1]
+                    if self.expr[0] == "(":
+                        index = 1
+                        parenth_counter = 1
+                index += 1
+
         if verbose: print("remove_redundant_parentheses, end:\t " + self.expr)
 
     def validate_request(self):
@@ -205,12 +243,13 @@ class ExpressionEvaluator:
                     index += 1
                 num_end = index - 1
                 if is_number(self.expr[num_start:num_end]):
-                    print("making integer from: " + self.expr[num_start:num_end])
-                    number = int(self.expr[num_start:num_end])
-                    self.output.put(number)
+                    if num_end > num_start:
+                        print("making integer from: " + self.expr[num_start:num_end])
+                        number = int(self.expr[num_start:num_end])
+                        self.output.put(number)
                 else:
                     raise InvalidExpressionError
-            elif self.expr[index] == "+" or self.expr[index] == "-" or self.expr[index] == "*" or self.expr[index] == "(":
+            '''elif self.expr[index] == "+" or self.expr[index] == "-" or self.expr[index] == "*" or self.expr[index] == "(":
                 self.stack.put(self.expr[index])
             elif self.expr[index] == "/":
                 operator = self.stack.get()
@@ -223,12 +262,12 @@ class ExpressionEvaluator:
                 if not open_parenth == "(":
                     raise ParenthesesError
             else:
-                raise UnallowedCharacterError
+                raise UnallowedCharacterError'''
             index += 1
 
-        while not self.stack.empty():
-            element = self.stack.get()
-            self.output.put(element)
+        #while not self.stack.empty():
+        #    element = self.stack.get()
+        #    self.output.put(element)
 
-        print(self.output)
+        print(list(self.output.queue))
         return self.expr + "\n"
