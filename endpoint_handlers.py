@@ -210,6 +210,31 @@ class RequestValidator:
                         index = 1
                         parenth_counter = 1
                 index += 1
+        # remove double parenthesis like ((xyz))
+        checked_chars = 0
+        while checked_chars < len(self.expr) - 3:
+            if self.expr[checked_chars] == "(":
+                if verbose: print("remove_double_parentheses, start:\t " + self.expr)
+                index = checked_chars + 1
+                parenth_start = checked_chars
+                parenth_counter = 1
+                while index < len(self.expr) and not parenth_counter == 0:
+                    if self.expr[index] == "(":
+                        parenth_counter += 1
+                    elif self.expr[index] == ")":
+                        parenth_counter += -1
+                    if parenth_counter == 0:
+                        parenth_end = index
+                        if self.expr[parenth_start + 1] == "(" and self.expr[parenth_end - 1] == ")":
+                            self.expr = self.expr[:parenth_start] + self.expr[parenth_start + 1:parenth_end - 1] + self.expr[parenth_end:]
+                            continue
+                            # we checked 1 char but we also shortened the string so checked_chars remains the same
+                        else:
+                            checked_chars += 1
+                    index += 1
+                if verbose: print("remove_double_parentheses, end:\t\t " + self.expr)
+            else:
+                checked_chars += 1
 
         if verbose: print("remove_redundant_parentheses, end:\t " + self.expr)
 
@@ -230,7 +255,7 @@ class ExpressionEvaluator:
     def __init__(self, expr):
         self.expr = expr
         self.stack = LifoQueue()     # stack for operators and parentheses
-        self.output = Queue()        # FIFO queue implemented as a list
+        self.output = Queue()        # FIFO queue
 
     def evaluate_expr(self):
         # this function is implementation of Reverse Polish Notation algorithm
@@ -241,33 +266,48 @@ class ExpressionEvaluator:
                 index += 1
                 while index < len(self.expr) and is_digit(self.expr[index]):
                     index += 1
-                num_end = index - 1
+                index += -1
+                num_end = index
                 if is_number(self.expr[num_start:num_end]):
                     if num_end > num_start:
-                        print("making integer from: " + self.expr[num_start:num_end])
-                        number = int(self.expr[num_start:num_end])
+                        number = int(self.expr[num_start:num_end+1])
                         self.output.put(number)
+                    elif num_end == num_start:
+                        number = int(self.expr[num_start])
+                        self.output.put(number)
+                    print("found: " + str(number))
+                    print("stack = " + str(list(self.stack.queue)))
+                    print("output = " + str(list(self.output.queue)))
                 else:
                     raise InvalidExpressionError
-            '''elif self.expr[index] == "+" or self.expr[index] == "-" or self.expr[index] == "*" or self.expr[index] == "(":
+            elif self.expr[index] == "+" or self.expr[index] == "-" or self.expr[index] == "*" or self.expr[index] == "(":
                 self.stack.put(self.expr[index])
+                print("found: " + self.expr[index])
+                print("stack = " + str(list(self.stack.queue)))
+                print("output = " + str(list(self.output.queue)))
             elif self.expr[index] == "/":
                 operator = self.stack.get()
                 self.output.put(operator)
                 self.stack.put(self.expr[index])
+                print("found: " + self.expr[index])
+                print("stack = " + str(list(self.stack.queue)))
+                print("output = " + str(list(self.output.queue)))
             elif self.expr[index] == ")":
                 operator = self.stack.get()
                 self.output.put(operator)
                 open_parenth = self.stack.get()
-                if not open_parenth == "(":
-                    raise ParenthesesError
+                print("found: " + self.expr[index])
+                print("stack = " + str(list(self.stack.queue)))
+                print("output = " + str(list(self.output.queue)))
+                #if not open_parenth == "(":
+                #    raise ParenthesesError
             else:
-                raise UnallowedCharacterError'''
+                raise UnallowedCharacterError
             index += 1
 
-        #while not self.stack.empty():
-        #    element = self.stack.get()
-        #    self.output.put(element)
+        while not self.stack.empty():
+            element = self.stack.get()
+            self.output.put(element)
 
         print(list(self.output.queue))
         return self.expr + "\n"
