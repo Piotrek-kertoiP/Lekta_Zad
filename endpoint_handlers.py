@@ -261,7 +261,7 @@ class ExpressionEvaluator:
         # this function is implementation of Reverse Polish Notation algorithm
         index = 0
         while index < len(self.expr):
-            if is_digit(self.expr[index]):
+            if is_digit(self.expr[index]):                                  #done
                 num_start = index
                 index += 1
                 while index < len(self.expr) and is_digit(self.expr[index]):
@@ -280,19 +280,12 @@ class ExpressionEvaluator:
                     print("output = " + str(list(self.output.queue)))
                 else:
                     raise InvalidExpressionError
-            elif self.expr[index] == "+" or self.expr[index] == "-" or self.expr[index] == "*" or self.expr[index] == "(":
+            elif self.expr[index] == "(":                                   #done
                 self.stack.put(self.expr[index])
                 print("found: " + self.expr[index])
                 print("stack = " + str(list(self.stack.queue)))
                 print("output = " + str(list(self.output.queue)))
-            elif self.expr[index] == "/":
-                operator = self.stack.get()
-                self.output.put(operator)
-                self.stack.put(self.expr[index])
-                print("found: " + self.expr[index])
-                print("stack = " + str(list(self.stack.queue)))
-                print("output = " + str(list(self.output.queue)))
-            elif self.expr[index] == ")":
+            elif self.expr[index] == ")":                                   #done
                 operator = self.stack.get()
                 self.output.put(operator)
                 open_parenth = self.stack.get()
@@ -301,6 +294,33 @@ class ExpressionEvaluator:
                 print("output = " + str(list(self.output.queue)))
                 #if not open_parenth == "(":
                 #    raise ParenthesesError
+            elif self.expr[index] == "+" or self.expr[index] == "-":
+                if self.stack.empty():
+                    self.stack.put(self.expr[index])
+                elif self.stack.get() == "(":
+                    self.stack.put("(")
+                    self.stack.put(self.expr[index])
+                else:
+                    self.stack.put(self.expr[index])
+
+                print("found: " + self.expr[index])
+                print("stack = " + str(list(self.stack.queue)))
+                print("output = " + str(list(self.output.queue)))
+            elif self.expr[index] == "*" or self.expr[index] == "/":
+                if self.stack.empty():
+                    self.stack.put(self.expr[index])
+                else:
+                    stack_top = self.stack.get()
+                    if stack_top == "+" or stack_top == "-" or stack_top == "(" or stack_top == ")":
+                        self.stack.put(stack_top)
+                        self.stack.put(self.expr[index])
+                    else:
+                        self.output.put(stack_top)
+                        self.stack.put(self.expr[index])
+
+                print("found: " + self.expr[index])
+                print("stack = " + str(list(self.stack.queue)))
+                print("output = " + str(list(self.output.queue)))
             else:
                 raise UnallowedCharacterError
             index += 1
