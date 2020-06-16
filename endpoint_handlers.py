@@ -1,4 +1,5 @@
 from custom_exceptions import ParenthesesError, UnallowedCharacterError, MissingOperationArgumentError, InvalidExpressionError
+from queue import LifoQueue, Queue
 
 verbose = True
 '''These are functions that may be commonly used'''
@@ -185,16 +186,49 @@ class RequestValidator:
             raise MissingOperationArgumentError
         self.add_missing_parentheses()
         self.remove_redundant_parentheses()
-        print("validate_request: " + self.expr)
         return self.expr
 
 class ExpressionEvaluator:
     def __init__(self, expr):
         self.expr = expr
-        self.operator_stack = []
-        self.numbers_stack = []
+        self.stack = LifoQueue()     # stack for operators and parentheses
+        self.output = Queue()        # FIFO queue implemented as a list
 
     def evaluate_expr(self):
-        print("evaluate_expr: " + self.expr)
-        # todo: implement ONP algorithm
+        # this function is implementation of Reverse Polish Notation algorithm
+        index = 0
+        while index < len(self.expr):
+            if is_digit(self.expr[index]):
+                num_start = index
+                index += 1
+                while index < len(self.expr) and is_digit(self.expr[index]):
+                    index += 1
+                num_end = index - 1
+                if is_number(self.expr[num_start:num_end]):
+                    print("making integer from: " + self.expr[num_start:num_end])
+                    number = int(self.expr[num_start:num_end])
+                    self.output.put(number)
+                else:
+                    raise InvalidExpressionError
+            elif self.expr[index] == "+" or self.expr[index] == "-" or self.expr[index] == "*" or self.expr[index] == "(":
+                self.stack.put(self.expr[index])
+            elif self.expr[index] == "/":
+                operator = self.stack.get()
+                self.output.put(operator)
+                self.stack.put(self.expr[index])
+            elif self.expr[index] == ")":
+                operator = self.stack.get()
+                self.output.put(operator)
+                open_parenth = self.stack.get()
+                if not open_parenth == "(":
+                    raise ParenthesesError
+            else:
+                raise UnallowedCharacterError
+            index += 1
+
+        while not self.stack.empty():
+            element = self.stack.get()
+            self.output.put(element)
+
+        print(self.output)
         return self.expr + "\n"
