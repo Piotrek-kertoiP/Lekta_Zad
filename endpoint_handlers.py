@@ -211,31 +211,6 @@ class RequestValidator:
                         parenth_counter = 1
                 i += 1
         # remove double parenthesis like ((xyz))
-        '''checked_chars = 0
-        while checked_chars < len(self.expr) - 3:
-            if self.expr[checked_chars] == "(":
-                if verbose: print("remove_double_parentheses, start:\t " + self.expr)
-                index = checked_chars + 1
-                parenth_start = checked_chars
-                parenth_counter = 1
-                while index < len(self.expr) and not parenth_counter == 0:
-                    if self.expr[index] == "(":
-                        parenth_counter += 1
-                    elif self.expr[index] == ")":
-                        parenth_counter += -1
-                    if parenth_counter == 0:
-                        parenth_end = index
-                        if self.expr[parenth_start + 1] == "(" and self.expr[parenth_end - 1] == ")":       #todo: bug here
-                            self.expr = self.expr[:parenth_start] + self.expr[parenth_start + 1:parenth_end - 1] + self.expr[parenth_end:]
-                            continue
-                            # we checked 1 char but we also shortened the string so checked_chars remains the same
-                        else:
-                            checked_chars += 1
-                    index += 1
-                
-                if verbose: print("remove_double_parentheses, end:\t\t " + self.expr)
-            else:
-                checked_chars += 1'''
         i = 1
         while i < len(self.expr) - 1:
             if verbose: print("remove_redundant_parentheses, end:\t " + self.expr)
