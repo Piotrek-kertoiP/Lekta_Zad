@@ -23,14 +23,14 @@ def evaluate_endpoint():
         return ee.evaluate_expr()
     except KeyError:
         return abort(400, "Probably wrong json data has been provided in the request")
-    #except ParenthesesError:
-    #    return abort(400, "Wrong parentheses")
+    except ParenthesesError:
+        return abort(400, "Wrong parentheses")
     except UnallowedCharacterError:
         return abort(400, "Characters other than {+,-,*,/,0-9,(,)} in the expression")
     except MissingOperationArgumentError:
         return abort(400, "The expression is missing one or more arguments for an operator")
-    #except InvalidExpressionError:
-    #    return abort(400, "There is some problem with the expression")
+    except InvalidExpressionError:
+        return abort(400, "There is some problem with the expression")
 
 
 if __name__ == '__main__':
