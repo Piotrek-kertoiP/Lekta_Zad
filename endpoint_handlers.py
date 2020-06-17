@@ -178,40 +178,40 @@ class RequestValidator:
     def remove_redundant_parentheses(self):
         if verbose: print("remove_redundant_parentheses, start: " + self.expr)
         # remove things like (1)
-        index = 1
-        while index < len(self.expr) - 1:
-            if is_digit(self.expr[index]) and self.expr[index - 1] == "(":
-                left_parenth_index = index - 1
-                while not self.expr[index] == ")":
-                    index += 1
-                right_parenth_index = index
+        i = 1
+        while i < len(self.expr) - 1:
+            if is_digit(self.expr[i]) and self.expr[i - 1] == "(":
+                left_parenth_index = i - 1
+                while not self.expr[i] == ")":
+                    i += 1
+                right_parenth_index = i
                 if is_number(self.expr[left_parenth_index + 1:right_parenth_index - 1]):
                     self.expr = self.expr[:left_parenth_index] + self.expr[left_parenth_index + 1:right_parenth_index] + self.expr[right_parenth_index + 1:]
-                    index += -1
-            index += 1
+                    i += -1
+            i += 1
         # remove things like ()
-        index = 0
-        while index < len(self.expr) - 1:
-            if self.expr[index] == "(" and self.expr[index+1] == ")":
-                self.expr = self.expr[:index] + self.expr[index+2:]
-            index += 1
+        i = 0
+        while i < len(self.expr) - 1:
+            if self.expr[i] == "(" and self.expr[i+1] == ")":
+                self.expr = self.expr[:i] + self.expr[i+2:]
+            i += 1
         # remove parenthesis wrapping whole expression
         if self.expr[0] == "(":
-            index = 1
+            i = 1
             parenth_counter = 1
-            while index < len(self.expr):
-                if self.expr[index] == "(":
+            while i < len(self.expr):
+                if self.expr[i] == "(":
                     parenth_counter += 1
-                elif self.expr[index] == ")":
+                elif self.expr[i] == ")":
                     parenth_counter += -1
-                if parenth_counter == 0 and index == len(self.expr):
+                if parenth_counter == 0 and i == len(self.expr):
                     self.expr = self.expr[1:len(self.expr) - 1]
                     if self.expr[0] == "(":
-                        index = 1
+                        i = 1
                         parenth_counter = 1
-                index += 1
+                i += 1
         # remove double parenthesis like ((xyz))
-        checked_chars = 0
+        '''checked_chars = 0
         while checked_chars < len(self.expr) - 3:
             if self.expr[checked_chars] == "(":
                 if verbose: print("remove_double_parentheses, start:\t " + self.expr)
@@ -232,10 +232,28 @@ class RequestValidator:
                         else:
                             checked_chars += 1
                     index += 1
+                
                 if verbose: print("remove_double_parentheses, end:\t\t " + self.expr)
             else:
-                checked_chars += 1
-
+                checked_chars += 1'''
+        i = 1
+        while i < len(self.expr) - 1:
+            if verbose: print("remove_redundant_parentheses, end:\t " + self.expr)
+            if self.expr[i] == "(" and self.expr[i - 1] == "(":
+                parenth_start = i
+                j = i + 1
+                parenth_counter = 1
+                while not parenth_counter == 0:
+                    if self.expr[j] == "(":
+                        parenth_counter += 1
+                    if self.expr[j] == ")":
+                        parenth_counter += -1
+                    j += 1
+                parenth_end = j - 1
+                if j < len(self.expr) and self.expr[j] == ")":
+                    self.expr = self.expr[:parenth_start - 1] + self.expr[parenth_start:parenth_end] + self.expr[parenth_end + 1:]
+                    i += -1
+            i += 1
         if verbose: print("remove_redundant_parentheses, end:\t " + self.expr)
 
     def validate_request(self):
