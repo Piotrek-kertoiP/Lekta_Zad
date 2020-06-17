@@ -225,7 +225,7 @@ class RequestValidator:
                         parenth_counter += -1
                     if parenth_counter == 0:
                         parenth_end = index
-                        if self.expr[parenth_start + 1] == "(" and self.expr[parenth_end - 1] == ")":
+                        if self.expr[parenth_start + 1] == "(" and self.expr[parenth_end - 1] == ")":       #todo: bug here
                             self.expr = self.expr[:parenth_start] + self.expr[parenth_start + 1:parenth_end - 1] + self.expr[parenth_end:]
                             continue
                             # we checked 1 char but we also shortened the string so checked_chars remains the same
@@ -257,43 +257,45 @@ class ExpressionEvaluator:
         self.stack = LifoQueue()     # stack for operators and parentheses
         self.output = Queue()        # FIFO queue
 
-    def evaluate_expr(self):
+    def print_logs(self, found_item):
+        print("found: " + found_item)
+        print("stack = " + str(list(self.stack.queue)))
+        print("output = " + str(list(self.output.queue)))
+
+    def convert_to_RPN(self):
         # this function is implementation of Reverse Polish Notation algorithm
         index = 0
         while index < len(self.expr):
-            if is_digit(self.expr[index]):                                  #done
+            if is_digit(self.expr[index]):
                 num_start = index
                 index += 1
                 while index < len(self.expr) and is_digit(self.expr[index]):
                     index += 1
                 index += -1
                 num_end = index
-                if is_number(self.expr[num_start:num_end]):
-                    if num_end > num_start:
-                        number = int(self.expr[num_start:num_end+1])
-                        self.output.put(number)
-                    elif num_end == num_start:
-                        number = int(self.expr[num_start])
-                        self.output.put(number)
-                    print("found: " + str(number))
-                    print("stack = " + str(list(self.stack.queue)))
-                    print("output = " + str(list(self.output.queue)))
+                if num_end > num_start:
+                    number = int(self.expr[num_start:num_end+1])
+                    self.output.put(number)
+                elif num_end == num_start:
+                    number = int(self.expr[num_start])
+                    self.output.put(number)
+
+                if verbose: self.print_logs(str(number))
+            elif self.expr[index] == "(":
+                self.stack.put(self.expr[index])
+
+                if verbose: self.print_logs(self.expr[index])
+            elif self.expr[index] == ")":
+                while not self.stack.empty():
+                    operator = self.stack.get()
+                    if not operator == "(":
+                        self.output.put(operator)
+                    else:
+                        break
                 else:
                     raise InvalidExpressionError
-            elif self.expr[index] == "(":                                   #done
-                self.stack.put(self.expr[index])
-                print("found: " + self.expr[index])
-                print("stack = " + str(list(self.stack.queue)))
-                print("output = " + str(list(self.output.queue)))
-            elif self.expr[index] == ")":                                   #done
-                operator = self.stack.get()
-                self.output.put(operator)
-                open_parenth = self.stack.get()
-                print("found: " + self.expr[index])
-                print("stack = " + str(list(self.stack.queue)))
-                print("output = " + str(list(self.output.queue)))
-                #if not open_parenth == "(":
-                #    raise ParenthesesError
+
+                if verbose: self.print_logs(self.expr[index])
             elif self.expr[index] == "+" or self.expr[index] == "-":
                 if self.stack.empty():
                     self.stack.put(self.expr[index])
@@ -303,9 +305,7 @@ class ExpressionEvaluator:
                 else:
                     self.stack.put(self.expr[index])
 
-                print("found: " + self.expr[index])
-                print("stack = " + str(list(self.stack.queue)))
-                print("output = " + str(list(self.output.queue)))
+                if verbose: self.print_logs(self.expr[index])
             elif self.expr[index] == "*" or self.expr[index] == "/":
                 if self.stack.empty():
                     self.stack.put(self.expr[index])
@@ -318,9 +318,7 @@ class ExpressionEvaluator:
                         self.output.put(stack_top)
                         self.stack.put(self.expr[index])
 
-                print("found: " + self.expr[index])
-                print("stack = " + str(list(self.stack.queue)))
-                print("output = " + str(list(self.output.queue)))
+                if verbose: self.print_logs(self.expr[index])
             else:
                 raise UnallowedCharacterError
             index += 1
@@ -328,6 +326,40 @@ class ExpressionEvaluator:
         while not self.stack.empty():
             element = self.stack.get()
             self.output.put(element)
-
         print(list(self.output.queue))
-        return self.expr + "\n"
+
+    def compute_RPN(self):
+        while not self.output.empty():
+            print("output = " + str(list(self.output.queue)))
+            print("stack = " + str(list(self.stack.queue)))
+
+            element = self.output.get()
+            if not is_operator(element):
+                self.stack.put(element)
+            else:
+                right_argument = self.stack.get()
+                left_argument = self.stack.get()
+                if element == "+":
+                    result = left_argument + right_argument
+                elif element == "-":
+                    result = left_argument - right_argument
+                elif element == "*":
+                    result = left_argument * right_argument
+                elif element == "/":
+                    result = left_argument / right_argument
+                self.stack.put(result)
+        print("output = " + str(list(self.output.queue)))
+        print("stack = " + str(list(self.stack.queue)))
+
+        print("self.stack.qsize() = " + str(self.stack.qsize()))
+        print("self.output.qsize() = " + str(self.output.qsize()))
+        if not (self.stack.qsize() == 1 and self.output.qsize() == 0):
+            raise InvalidExpressionError
+
+        return self.stack.get()
+
+    def evaluate_expr(self):
+        self.convert_to_RPN()   #converts expression as string to queue in Reversed Polish Notation
+        result = self.compute_RPN()
+        return str(result) + "\n"
+
