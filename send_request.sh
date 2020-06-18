@@ -41,4 +41,5 @@ printf "\n\n"
 echo "Request data = \"expression\":\"( 32 - 42 / 95 + 24 ( ) ( 53 ) + ) 21\""
 curl -H "Content-Type: application/json" -X POST -d '{"expression":"( 32 - 42 / 95 + 24 ( ) ( 53 ) + ) 21"}' http://localhost:5000/evaluate
 
-
+echo "Request data = \"expression\":\"2/0\""
+curl -H "Content-Type: application/json" -X POST -d '{"expression":"2/0"}' http://localhost:5000/evaluate

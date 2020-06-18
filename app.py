@@ -1,3 +1,4 @@
+import traceback
 from flask import Flask, request, abort
 from custom_exceptions import ParenthesesError, UnallowedCharacterError, MissingOperationArgumentError, InvalidExpressionError
 from endpoint_handlers import RequestValidator, ExpressionEvaluator
@@ -23,6 +24,10 @@ def evaluate_endpoint():
         return abort(400, "The expression is missing one or more arguments for an operator")
     except InvalidExpressionError:
         return abort(400, "There is some problem with the expression")
+    except ZeroDivisionError:
+        return abort(400, "You can't divide by zero")
+    except Exception as e:
+        return abort(400, "Unknown problem has occured; exception details\n" + traceback.print_exc())
 
 
 if __name__ == '__main__':
