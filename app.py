@@ -1,5 +1,3 @@
-import time
-import random
 from flask import Flask, request, abort
 from custom_exceptions import ParenthesesError, UnallowedCharacterError, MissingOperationArgumentError, InvalidExpressionError
 from endpoint_handlers import RequestValidator, ExpressionEvaluator
@@ -8,19 +6,9 @@ app = Flask(__name__)
 
 SERVER_PORT = "5000"
 
-
-@app.route('/')
-def hello_world():
-    return 'Hello World!'
-
-
 @app.route('/evaluate', methods=["POST"])
 def evaluate_endpoint():
     try:
-        delay_time = random.randint(2, 10)
-        print("Waiting for " + str(delay_time) + " seconds...")
-        time.sleep(delay_time)
-        print("...Resuming execution after " + str(delay_time) + " seconds")
         rv = RequestValidator(request)
         expr = rv.validate_request()
         ee = ExpressionEvaluator(expr)
