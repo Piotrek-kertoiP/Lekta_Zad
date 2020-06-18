@@ -1,7 +1,10 @@
+import concurrent.futures
+import json
+
 from custom_exceptions import ParenthesesError, UnallowedCharacterError, MissingOperationArgumentError, InvalidExpressionError
 from queue import LifoQueue, Queue
 
-verbose = True
+verbose = False
 '''These are functions that may be commonly used'''
 def is_operator(char):
     if char == "+" or char == "-" or char == '/' or char == "*":
@@ -213,7 +216,7 @@ class RequestValidator:
         # remove double parenthesis like ((xyz))
         i = 1
         while i < len(self.expr) - 1:
-            if verbose: print("remove_redundant_parentheses, end:\t " + self.expr)
+            if verbose: print("remove_redundant_parentheses:\t " + self.expr)
             if self.expr[i] == "(" and self.expr[i - 1] == "(":
                 parenth_start = i
                 j = i + 1
@@ -233,12 +236,20 @@ class RequestValidator:
 
     def validate_request(self):
         self.omit_whitespaces()
-        if not self.check_parentheses():
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future1 = executor.submit(self.check_parentheses)
+            future2 = executor.submit(self.check_for_unallowed_characters)
+            future3 = executor.submit(self.check_operator_neighbours)
+            result_check_parentheses = future1.result()
+            result_check_for_unallowed_characters = future2.result()
+            result_check_operator_neighbours = future3.result()
+        if not result_check_parentheses:
             raise ParenthesesError
-        if not self.check_for_unallowed_characters():
+        if not result_check_for_unallowed_characters:
             raise UnallowedCharacterError
         self.change_unary_minus()
-        if not self.check_operator_neighbours():
+        if not result_check_operator_neighbours:
             raise MissingOperationArgumentError
         self.add_missing_parentheses()
         self.remove_redundant_parentheses()
@@ -319,12 +330,12 @@ class ExpressionEvaluator:
         while not self.stack.empty():
             element = self.stack.get()
             self.output.put(element)
-        print(list(self.output.queue))
+        if verbose: print(list(self.output.queue))
 
     def compute_RPN(self):
         while not self.output.empty():
-            print("output = " + str(list(self.output.queue)))
-            print("stack = " + str(list(self.stack.queue)))
+            if verbose: print("output = " + str(list(self.output.queue)))
+            if verbose: print("stack = " + str(list(self.stack.queue)))
 
             element = self.output.get()
             if not is_operator(element):
@@ -341,11 +352,9 @@ class ExpressionEvaluator:
                 elif element == "/":
                     result = left_argument / right_argument
                 self.stack.put(result)
-        print("output = " + str(list(self.output.queue)))
-        print("stack = " + str(list(self.stack.queue)))
+        if verbose: print("output = " + str(list(self.output.queue)))
+        if verbose: print("stack = " + str(list(self.stack.queue)))
 
-        print("self.stack.qsize() = " + str(self.stack.qsize()))
-        print("self.output.qsize() = " + str(self.output.qsize()))
         if not (self.stack.qsize() == 1 and self.output.qsize() == 0):
             raise InvalidExpressionError
 
@@ -354,5 +363,5 @@ class ExpressionEvaluator:
     def evaluate_expr(self):
         self.convert_to_RPN()   #converts expression as string to queue in Reversed Polish Notation
         result = self.compute_RPN()
-        return str(result) + "\n"
-
+        response = {"result": result}
+        return json.dumps(response)
